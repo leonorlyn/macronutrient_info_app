@@ -7,21 +7,19 @@ def get_anonymous_user():
     return User.objects.get(username="AnonymousUser")  # 替换为你数据库中的匿名用户的用户名
 
 def index(request):
+    if request.user.is_authenticated:
+        user = request.user
+    else:
+        user = get_anonymous_user()
+        
     if request.method == "POST":
         food_consumed = request.POST.get('food_consumed')
         if food_consumed:
             try:
-                consume = Food.objects.get(name=food_consumed)
-                
-                if request.user.is_authenticated:
-                    user = request.user
-                else:
-                    user = get_anonymous_user()
-                    
-                consume = Consume(user=user, food_consumed=consume)
+                consumed_food_item = Food.objects.get(name=food_consumed)
+                consume = Consume(user=user, food_consumed=consumed_food_item)
                 consume.save()
             except Food.DoesNotExist:
-                # handle the error here, maybe return an error message
                 pass
     
     foods = Food.objects.all()
