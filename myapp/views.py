@@ -1,24 +1,53 @@
 from django.shortcuts import render, redirect
 from .models import Food, Consume
 
-# add selected food items to the user
+from django.contrib.auth.models import User
+
+def get_anonymous_user():
+    return User.objects.get(username="AnonymousUser")  # 替换为你数据库中的匿名用户的用户名
+
 def index(request):
     if request.method == "POST":
-        food_consumed = request.POST.get('food_consumed') 
-        if food_consumed:  
+        food_consumed = request.POST.get('food_consumed')
+        if food_consumed:
             try:
-                consume = Food.objects.get(name=food_consumed)
-                user = request.user
-                consume = Consume(user=user, food_consumed=consume)
+                consumed_food_item = Food.objects.get(name=food_consumed)
+                
+                if request.user.is_authenticated:
+                    user = request.user
+                else:
+                    user = get_anonymous_user()
+                    
+                consume = Consume(user=user, food_consumed=consumed_food_item)
                 consume.save()
             except Food.DoesNotExist:
-                # handle empty error
+                # handle the error here, maybe return an error message
                 pass
-
+    
     foods = Food.objects.all()
     consumed_food = Consume.objects.filter(user=request.user.id)
-
+    
     return render(request, 'myapp/index.html', {'foods': foods, 'consumed_food': consumed_food})
+
+
+# # add selected food items to the user
+# def index(request):
+#     if request.method == "POST":
+#         food_consumed = request.POST.get('food_consumed') 
+#         if food_consumed:  
+#             try:
+#                 consume = Food.objects.get(name=food_consumed)
+#                 user = request.user
+#                 consume = Consume(user=user, food_consumed=consume)
+#                 consume.save()
+#             except Food.DoesNotExist:
+#                 # handle empty error
+#                 pass
+
+#     foods = Food.objects.all()
+#     consumed_food = Consume.objects.filter(user=request.user.id)
+
+#     return render(request, 'myapp/index.html', {'foods': foods, 'consumed_food': consumed_food})
 
 
 # delete the selcted food item
